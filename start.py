@@ -10,7 +10,8 @@ if __name__ == '__main__':
     # 使用 TestLoader 来加载测试用例
     loader = unittest.TestLoader()
     suite.addTests(loader.loadTestsFromTestCase(TestLoginAdmin))  # 这个类里面所有的测试用例
-    suite.addTests(loader.loadTestsFromFindCase(TestSystemManage))
+    suite.addTests(loader.loadTestsFromTestCase(TestSystemManage))
+    suite.addTests(loader.loadTestsFromTestCase(TestLoginAdmin))
 
     # 使用 BeautifulReport 生成测试报告
     result = BeautifulReport(suite)
