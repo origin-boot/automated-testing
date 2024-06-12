@@ -1,3 +1,4 @@
+import re
 import time
 import unittest
 
@@ -11,25 +12,28 @@ from web.login import LoginAdmin
 
 class TestSystemManage(unittest.TestCase):
 
+    # 定义全局数据
+    config = {
+        'user': 'root',
+        'password': '1qQO7DAfzz2kbj6L',
+        'host': '36.138.74.151',
+        'database': 'medical_records_core',
+        'raise_on_warnings': True
+    }
+    Hospital_Code = "SZQY_MEDICAL"
+    Hospital_Name = "数智起源-Medical"
+    Medical_code = "641300"
+    Manager_name = "数智起源"
+    Insert_name = "数智起源"
+    Insert_phone = "0000-14332232"
+    Statistics_name = "数智起源"
+    Statistics_phone = "0000-14332233"
     def setUp(self):
+
+        # 初始化页面
         self.driver = webdriver.Chrome()
         self.login_admin = LoginAdmin(self.driver)
-
-    def test_Hospital_Maintenance(self):
-
-        # 页面输入框值定义
-        Hospital_Code = "SZQY_MEDICAL"
-        Hospital_Name = "数智起源-Medical"
-        Medical_code = "641300"
-        Manager_name = "数智起源"
-        Insert_name = "数智起源"
-        Insert_phone = "0000-14332232"
-        Statistics_name = "数智起源"
-        Statistics_phone = "0000-14332233"
-
-        # 登录到系统
         self.login_admin.login("admin", "admin123")
-
 
         # 找到系统管理菜单并进行点击
         element = WebDriverWait(self.driver, 10).until(
@@ -37,6 +41,7 @@ class TestSystemManage(unittest.TestCase):
         )
         element.click()
 
+    def test_Hospital_Maintenance(self):
 
         # 找到医院信息维护菜单进行点击跳转到页面
         element = WebDriverWait(self.driver, 10).until(
@@ -45,16 +50,13 @@ class TestSystemManage(unittest.TestCase):
         element.click()
 
 
-        time.sleep(2)  # 等待页面元素加载
-
-
         # 插入医院机构代码
         # 对页面元素进行输入新值并保存
         element = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[1]/div[1]/div/div/div/div/input"))
         )
         element.clear()
-        element.send_keys(Hospital_Code)
+        element.send_keys(self.Hospital_Code)
 
 
         # 插入医院机构名称
@@ -63,7 +65,7 @@ class TestSystemManage(unittest.TestCase):
                 (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[1]/div[2]/div/div/div/div/input"))
         )
         element.clear()
-        element.send_keys(Hospital_Name)
+        element.send_keys(self.Hospital_Name)
 
 
         # 插入医院机构地区编码
@@ -72,7 +74,7 @@ class TestSystemManage(unittest.TestCase):
                 (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[1]/div[3]/div/div/div/div/input"))
         )
         element.clear()
-        element.send_keys(Medical_code)
+        element.send_keys(self.Medical_code)
 
 
 
@@ -101,7 +103,7 @@ class TestSystemManage(unittest.TestCase):
                 (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[2]/div[2]/div/div/div/div/input"))
         )
         element.clear()
-        element.send_keys(Manager_name)
+        element.send_keys(self.Manager_name)
 
 
         # 插入录入负责人
@@ -110,7 +112,7 @@ class TestSystemManage(unittest.TestCase):
                 (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[2]/div[3]/div/div/div/div/input"))
         )
         element.clear()
-        element.send_keys(Insert_name)
+        element.send_keys(self.Insert_name)
 
         # 插入录入负责人电话
         element = WebDriverWait(self.driver, 10).until(
@@ -118,7 +120,7 @@ class TestSystemManage(unittest.TestCase):
                 (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[3]/div[1]/div/div/div/div/input"))
         )
         element.clear()
-        element.send_keys(Insert_phone)
+        element.send_keys(self.Insert_phone)
 
         # 插入统计负责人
         element = WebDriverWait(self.driver, 10).until(
@@ -126,7 +128,7 @@ class TestSystemManage(unittest.TestCase):
                 (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[3]/div[2]/div/div/div/div/input"))
         )
         element.clear()
-        element.send_keys(Statistics_name)
+        element.send_keys(self.Statistics_name)
 
         # 插入统计负责人电话
         element = WebDriverWait(self.driver, 10).until(
@@ -134,7 +136,7 @@ class TestSystemManage(unittest.TestCase):
                 (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[3]/div[3]/div/div/div/div/input"))
         )
         element.clear()
-        element.send_keys(Statistics_phone)
+        element.send_keys(self.Statistics_phone)
 
 
         # 点击保存按钮
@@ -146,15 +148,7 @@ class TestSystemManage(unittest.TestCase):
 
 
         # 进行数据库查询,并进行对比，查看数据是否保存成功
-        config = {
-            'user': 'root',
-            'password': '1qQO7DAfzz2kbj6L',
-            'host': '36.138.74.151',
-            'database': 'medical_records_core',
-            'raise_on_warnings': True
-        }
-
-        conn = mysql.connector.connect(**config)
+        conn = mysql.connector.connect(**self.config)
 
         # 检查是否连接成功
         if conn.is_connected():
@@ -167,12 +161,66 @@ class TestSystemManage(unittest.TestCase):
         cursor.close()  # 关闭游标
         if row:
             code, name, area_code, medical_type, unit_personnel, fill_personnel, fill_landline, count_personnel, count_phone = row
-            if code == Hospital_Code and name == Hospital_Name and area_code == Medical_code and medical_type == '4' and unit_personnel == Manager_name and fill_personnel == Insert_name and fill_landline == Insert_phone and count_personnel == count_personnel and count_phone == count_phone:
-                print('医疗机构信息数据保存无误')
-                return None
-            else:
-                print('医疗机构信息数据保存有误')
-                return False
+        self.assertEqual(code, self.Hospital_Code, "医院代码不正确")
+        self.assertEqual(name, self.Hospital_Name, "医院名称不正确")
+        self.assertEqual(area_code, self.Medical_code, "地区编码不正确")
+        self.assertEqual(medical_type, "4", "医疗机构类型不正确")
+        self.assertEqual(unit_personnel, self.Manager_name, "机构负责人不正确")
+        self.assertEqual(fill_personnel, self.Insert_name, "录入负责人不正确")
+        self.assertEqual(fill_landline, self.Insert_phone, "录入负责人电话不正确")
+        self.assertEqual(count_personnel, self.Statistics_name, "统计负责人不正确")
+        self.assertEqual(count_phone, self.Statistics_phone, "统计负责人电话不正确")
+
+    # 新增用户
+    def  test_countUsers(self):
+
+
+
+        # 找到用户管理菜单进行点击跳转到页面
+        element = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//span[text()='用户管理']"))
+        )
+        element.click()
+
+        # 查询用户页面所有数据对比数据库，是否一致
+        # 获取页面用户数量总计
+        element = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "is-first"))
+        )
+        elements = element.text
+        usernums = re.findall(r'\d+', elements)
+        if usernums:
+            usernum = int(usernums[0])
+
+
+        # 查询数据库用户总计，并进行对比
+        conn = mysql.connector.connect(**self.config)
+        self.assertTrue(conn.is_connected(), "数据库连接失败")
+
+        cursor = conn.cursor()  # 创建游标对象
+        cursor.execute("SELECT count(*) as num FROM sys_user WHERE del_flag = 0 ;")  # 执行查询
+        num = cursor.fetchone()[0]  # 获取查询结果
+        cursor.close()  # 关闭游标
+        conn.close()  # 关闭数据库连接
+
+        # 断言数据库中的用户数和页面上显示的用户数是否一致
+        self.assertEqual(num, usernum, f"用户查询有误，页面显示: {usernum}条, 数据库: {num}条")
+
+        def test_searchUsers(self):
+            self.login_admin.login("admin", "admin123")
+
+            # 找到系统管理菜单并进行点击
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//span[text()='系统管理']"))
+            )
+            element.click()
+
+            # 找到用户管理菜单进行点击跳转到页面
+            element = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//span[text()='用户管理']"))
+            )
+            element.click()
+
 
 
     def tearDown(self):
