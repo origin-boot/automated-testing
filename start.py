@@ -1,7 +1,7 @@
 import unittest
 from BeautifulReport import BeautifulReport
 from testcase.LoginTest import TestLoginAdmin
-from testcase.SystemManage import TestSystemManage
+from testcase.UserManage import TestSystemManage
 
 if __name__ == '__main__':
     # 定义一个测试套件

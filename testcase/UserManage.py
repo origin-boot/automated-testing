@@ -13,7 +13,7 @@ from selenium.webdriver.common.by import By
 from web.login import LoginAdmin
 
 
-class TestSystemManage(unittest.TestCase):
+class TestUserManage(unittest.TestCase):
 
     # 定义全局数据
     config = {
@@ -46,145 +46,15 @@ class TestSystemManage(unittest.TestCase):
         )
         element.click()
 
-    def test_Hospital_Maintenance(self):
-
-        # 找到医院信息维护菜单进行点击跳转到页面
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//span[text()='医院信息维护']"))
-        )
-        element.click()
-
-
-        # 插入医院机构代码
-        # 对页面元素进行输入新值并保存
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[1]/div[1]/div/div/div/div/input"))
-        )
-        element.clear()
-        element.send_keys(self.Hospital_Code)
-
-
-        # 插入医院机构名称
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[1]/div[2]/div/div/div/div/input"))
-        )
-        element.clear()
-        element.send_keys(self.Hospital_Name)
-
-
-        # 插入医院机构地区编码
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[1]/div[3]/div/div/div/div/input"))
-        )
-        element.clear()
-        element.send_keys(self.Medical_code)
-
-
-
-        # 插入医疗机构类型
-        # 找到下拉框
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[2]/div[1]/div/div/div/div/div/div/input"))
-        )
-        # 点击下拉框以激活它
-        element.click()
-        # 如果输入后下拉选项自动出现，等待并选择下拉选项
-        # 循环遍历下拉框数据 找到4：西医时进行点击操作
-        elements = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".el-select-dropdown__item"))
-        )
-        for element in elements:
-            if "4:西医" in element.text:
-                element.click()
-                break
-
-
-        # 插入医院机构负责人
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[2]/div[2]/div/div/div/div/input"))
-        )
-        element.clear()
-        element.send_keys(self.Manager_name)
-
-
-        # 插入录入负责人
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[2]/div[3]/div/div/div/div/input"))
-        )
-        element.clear()
-        element.send_keys(self.Insert_name)
-
-        # 插入录入负责人电话
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[3]/div[1]/div/div/div/div/input"))
-        )
-        element.clear()
-        element.send_keys(self.Insert_phone)
-
-        # 插入统计负责人
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[3]/div[2]/div/div/div/div/input"))
-        )
-        element.clear()
-        element.send_keys(self.Statistics_name)
-
-        # 插入统计负责人电话
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[3]/div[3]/div/div/div/div/input"))
-        )
-        element.clear()
-        element.send_keys(self.Statistics_phone)
-
-
-        # 点击保存按钮
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[4]/div/button"))
-        )
-        element.click()
-
-
-        # 进行数据库查询,并进行对比，查看数据是否保存成功
-        conn = mysql.connector.connect(**self.config)
-
-        # 检查是否连接成功
-        if conn.is_connected():
-            print('成功连接到数据库')
-        cursor = conn.cursor()  # 创建游标对象
-
-        query = "SELECT code, name,  area_code, medical_type, unit_personnel, fill_personnel, fill_landline, count_personnel,count_phone FROM  hospital_config;"  # 编写 SQL 查询
-        cursor.execute(query)  # 执行查询
-        row = cursor.fetchone()
-        cursor.close()  # 关闭游标
-        conn.close()  # 关闭数据库连接
-        if row:
-            code, name, area_code, medical_type, unit_personnel, fill_personnel, fill_landline, count_personnel, count_phone = row
-        self.assertEqual(code, self.Hospital_Code, "医院代码不正确")
-        self.assertEqual(name, self.Hospital_Name, "医院名称不正确")
-        self.assertEqual(area_code, self.Medical_code, "机构地区编码不正确")
-        self.assertEqual(medical_type, "4", "医疗机构类型不正确")
-        self.assertEqual(unit_personnel, self.Manager_name, "机构负责人不正确")
-        self.assertEqual(fill_personnel, self.Insert_name, "录入负责人不正确")
-        self.assertEqual(fill_landline, self.Insert_phone, "录入负责人电话不正确")
-        self.assertEqual(count_personnel, self.Statistics_name, "统计负责人不正确")
-        self.assertEqual(count_phone, self.Statistics_phone, "统计负责人电话不正确")
-
-    # 新增用户
-    def  test_countUsers(self):
-
         # 找到用户管理菜单进行点击跳转到页面
         element = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//span[text()='用户管理']"))
         )
         element.click()
+
+
+    # 新增用户
+    def  test_countUsers(self):
 
         # 查询用户页面所有数据对比数据库，是否一致
         # 获取页面用户数量总计
@@ -211,11 +81,6 @@ class TestSystemManage(unittest.TestCase):
         self.assertEqual(num, usernum, f"用户查询有误，页面显示: {usernum}条, 数据库: {num}条")
 
     def test_searchUsers(self):
-        # 找到用户管理菜单进行点击跳转到页面
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//span[text()='用户管理']"))
-        )
-        element.click()
 
         # 查询数据库用户总计，并进行对比
         conn = mysql.connector.connect(**self.config)
@@ -290,12 +155,7 @@ class TestSystemManage(unittest.TestCase):
             time.sleep(3)
         if self.test_failed == True:
             self.fail("用例失败")
-    def test_searchCountUsers(self):
-        # 找到用户管理菜单进行点击跳转到页面
-        element = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//span[text()='用户管理']"))
-        )
-        element.click()
+    def test_searchCountStatus(self):
 
         # 查询用户页面所有数据对比数据库，是否一致
         element = WebDriverWait(self.driver, 10).until(
@@ -332,6 +192,8 @@ class TestSystemManage(unittest.TestCase):
         # 断言数据库中的用户数和页面上显示的用户数是否一致
         self.assertEqual(num, usernum, f"用户查询有误，页面显示: {usernum}条, 数据库: {num}条")
 
-
+    # def test_searchCountDate(self):
+    #
+    #
     def tearDown(self):
         self.driver.quit()
