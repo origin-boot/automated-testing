@@ -1,19 +1,14 @@
-
 # -*- coding: utf-8 -*-
-import re
-import time
 import unittest
 
 import mysql.connector
 from selenium import webdriver
-from selenium.common import TimeoutException
-from selenium.webdriver import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from web.login import LoginAdmin
+from subs.login import LoginAdmin
 
-class TestUserManage(unittest.TestCase):
+class TestHospitalManage(unittest.TestCase):
 
     # 定义全局数据
     config = {

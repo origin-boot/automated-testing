@@ -1,7 +1,8 @@
 import unittest
 from BeautifulReport import BeautifulReport
 from testcase.LoginTest import TestLoginAdmin
-from testcase.UserManage import TestSystemManage
+from testcase.UserManage import TestUserManage
+from testcase.HospitalInfomation import T
 
 if __name__ == '__main__':
     # 定义一个测试套件
@@ -10,7 +11,7 @@ if __name__ == '__main__':
     # 使用 TestLoader 来加载测试用例
     loader = unittest.TestLoader()
     suite.addTests(loader.loadTestsFromTestCase(TestLoginAdmin))  # 这个类里面所有的测试用例
-    suite.addTests(loader.loadTestsFromTestCase(TestSystemManage))
+    suite.addTests(loader.loadTestsFromTestCase(TestUserManage))
     suite.addTests(loader.loadTestsFromTestCase(TestLoginAdmin))
 
     # 使用 BeautifulReport 生成测试报告
