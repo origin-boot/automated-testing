@@ -14,12 +14,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from subs.login import LoginAdmin
 from __globe import config
+from __globe import use_sql
 from subs.usemysql import UseMysql
+
 
 class TestUserManage(unittest.TestCase):
     test_failed = False
     user_status = '0'
-
     def setUp(self):
 
         # 初始化页面
@@ -57,10 +58,8 @@ class TestUserManage(unittest.TestCase):
         self.assertTrue(conn.is_connected(), "数据库连接失败")
 
         cursor = conn.cursor()  # 创建游标对象
-        cursor.execute("SELECT count(*) as num FROM sys_user WHERE del_flag = 0 ;")  # 执行查询
-        num = cursor.fetchone()[0]  # 获取查询结果
-        cursor.close()  # 关闭游标
-        conn.close()  # 关闭数据库连接
+        query = "SELECT count(*) as num FROM sys_user WHERE del_flag = 0 ;"  # 执行查询
+        num = use_sql.useMysql(query)
 
         # 断言数据库中的用户数和页面上显示的用户数是否一致
         self.assertEqual(num, usernum, f"用户查询有误，页面显示: {usernum}条, 数据库: {num}条")
@@ -68,14 +67,8 @@ class TestUserManage(unittest.TestCase):
     def test_searchUsers(self):
 
         # 查询数据库用户总计，并进行对比
-        conn = mysql.connector.connect(**config)
-        self.assertTrue(conn.is_connected(), "数据库连接失败")
-
-        cursor = conn.cursor()  # 创建游标对象
-        cursor.execute("SELECT user_name, nick_name  FROM sys_user WHERE del_flag = 0 limit 5;")  # 执行查询
-        usernames = cursor.fetchall()  # 获取查询结果
-        cursor.close()  # 关闭游标
-        conn.close()  # 关闭数据库连接
+        query = "SELECT user_name, nick_name  FROM sys_user WHERE del_flag = 0 limit 5;" # 执行查询
+        usernames = use_sql.useMysql(query)
 
         # 循环遍历查询账号，并传入查询框中进行查询，对比结果
         for username in usernames:
@@ -170,8 +163,8 @@ class TestUserManage(unittest.TestCase):
         self.assertTrue(conn.is_connected(), "数据库连接失败")
 
         cursor = conn.cursor()  # 创建游标对象
-        cursor.execute("SELECT count(*) as num FROM sys_user WHERE del_flag = 0 and status = 0;")  # 执行查询
-        num = cursor.fetchone()[0]  # 获取查询结果
+        query = "SELECT count(*) as num FROM sys_user WHERE del_flag = 0 and status = 0;"  # 执行查询
+        num = use_sql.useMysql(query)  # 获取查询结果
         cursor.close()  # 关闭游标
         conn.close()  # 关闭数据库连接
 
@@ -207,8 +200,7 @@ class TestUserManage(unittest.TestCase):
 
         # 查询数据库用户总计，并进行对比
         query = "SELECT count(*) as num FROM sys_user WHERE del_flag = 0 and create_time >= '2023-11-01 00:00:00' and create_time <= '2023-11-30 23:59:59' ;" # 执行查询
-        count_sql = UseMysql()
-        nums = count_sql.useMysql(query)  # 获取查询结果
+        nums = use_sql.useMysql(query)  # 获取查询结果
         num = nums[0][0]
         # 断言数据库中的用户数和页面上显示的用户数是否一致
         self.assertEqual(num, usernum, f"用户查询有误，页面显示: {usernum}条, 数据库: {num}条")
@@ -218,6 +210,7 @@ class TestUserManage(unittest.TestCase):
 
 
 class TestInsertUser(unittest.TestCase):
+
     def setUp(self):
         # 初始化页面
         self.driver = webdriver.Chrome()
@@ -282,8 +275,7 @@ class TestInsertUser(unittest.TestCase):
 
         # 查询数据库角色，通过获取比对进行勾选
         query = "SELECT role_name  FROM sys_role where del_flag = 0 and role_key !='admin';"  # 执行查询
-        roles_sql = UseMysql()
-        role = roles_sql.useMysql(query)# 获取查询结果
+        role = use_sql.useMysql(query)# 获取查询结果
         # 随机选择第一个元素并点击
         first_index = random.randint(0, len(role) - 1)
         first_role = role[first_index]
@@ -347,8 +339,7 @@ class TestInsertUser(unittest.TestCase):
 
         # 查询数据库科室，通过获取比对进行勾选
         query = "SELECT dept_name  FROM sys_dept where del_flag = 0 and status = 0;" # 执行查询
-        depts_sql = UseMysql()
-        depts = depts_sql.useMysql(query)# 获取查询结果
+        depts = use_sql.useMysql(query) # 获取查询结果
         # 随机选择第一个元素并点击
         first_index = random.randint(0, len(depts) - 1)
         first_dept = depts[first_index]
