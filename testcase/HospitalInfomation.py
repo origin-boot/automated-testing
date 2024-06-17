@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import random
+import time
 import unittest
 
 import mysql.connector
@@ -7,17 +9,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from subs.login import LoginAdmin
+from testcase.__globe import config
 
 class TestHospitalManage(unittest.TestCase):
 
     # 定义全局数据
-    config = {
-        'user': 'root',
-        'password': '1qQO7DAfzz2kbj6L',
-        'host': '36.138.74.151',
-        'database': 'medical_records_core',
-        'raise_on_warnings': True
-    }
     Hospital_Code = "SZQY_MEDICAL"
     Hospital_Name = "数智起源-Medical"
     Medical_code = "641300"
@@ -46,8 +42,10 @@ class TestHospitalManage(unittest.TestCase):
             EC.element_to_be_clickable((By.XPATH, "//span[text()='医院信息维护']"))
         )
         element.click()
-
+        time.sleep(1)
+        self.driver.refresh()
     def test_Hospital_Maintenance(self):
+
 
         # 插入医院机构代码
         # 对页面元素进行输入新值并保存
@@ -82,21 +80,27 @@ class TestHospitalManage(unittest.TestCase):
         # 找到下拉框
         element = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[2]/div[1]/div/div/div/div/div/div/input"))
+                (By.CLASS_NAME, "m-2"))
         )
         # 点击下拉框以激活它
         element.click()
         # 如果输入后下拉选项自动出现，等待并选择下拉选项
-        # 循环遍历下拉框数据 找到4：西医时进行点击操作
+        # 循环遍历下拉框数据 随机进行点击操作
         elements = WebDriverWait(self.driver, 10).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".el-select-dropdown__item"))
         )
-        for element in elements:
-            if "4:西医" in element.text:
-                element.click()
-                break
-
-
+        first_index = random.randint(0, len(elements) - 1)
+        element = elements[first_index]
+        time.sleep(1)
+        element.click()
+        if element.text == "1:中医":
+            Hospital_type = "1"
+        elif element.text == "2:民族医":
+            Hospital_type = "2"
+        elif element.text == "3:中西医":
+            Hospital_type = "3"
+        else:
+            Hospital_type = "4"
         # 插入医院机构负责人
         element = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable(
@@ -142,13 +146,13 @@ class TestHospitalManage(unittest.TestCase):
         # 点击保存按钮
         element = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/form/div[4]/div/button"))
+                (By.CLASS_NAME, "el-button--primary"))
         )
         element.click()
 
-
+        time.sleep(3)
         # 进行数据库查询,并进行对比，查看数据是否保存成功
-        conn = mysql.connector.connect(**self.config)
+        conn = mysql.connector.connect(**config)
 
         # 检查是否连接成功
         if conn.is_connected():
@@ -165,7 +169,7 @@ class TestHospitalManage(unittest.TestCase):
         self.assertEqual(code, self.Hospital_Code, "医院代码不正确")
         self.assertEqual(name, self.Hospital_Name, "医院名称不正确")
         self.assertEqual(area_code, self.Medical_code, "机构地区编码不正确")
-        self.assertEqual(medical_type, "4", "医疗机构类型不正确")
+        self.assertEqual(medical_type, Hospital_type, "医疗机构类型不正确")
         self.assertEqual(unit_personnel, self.Manager_name, "机构负责人不正确")
         self.assertEqual(fill_personnel, self.Insert_name, "录入负责人不正确")
         self.assertEqual(fill_landline, self.Insert_phone, "录入负责人电话不正确")
