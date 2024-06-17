@@ -1,5 +1,4 @@
 # 定义全局数据
-from subs.usemysql import UseMysql
 
 config = {
     'user': 'root',
@@ -8,4 +7,3 @@ config = {
     'database': 'medical_records_core',
     'raise_on_warnings': True
 }
-use_sql = UseMysql()

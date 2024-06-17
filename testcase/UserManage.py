@@ -7,20 +7,22 @@ import unittest
 
 import mysql.connector
 from selenium import webdriver
-from selenium.common import TimeoutException
+from selenium.common import TimeoutException, NoSuchElementException, WebDriverException
 from selenium.webdriver import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from subs.login import LoginAdmin
 from __globe import config
-from __globe import use_sql
 from subs.usemysql import UseMysql
+from subs.IdNumber import generate_id_number
+
 
 
 class TestUserManage(unittest.TestCase):
     test_failed = False
     user_status = '0'
+    use_sql = UseMysql()
     def setUp(self):
 
         # 初始化页面
@@ -54,13 +56,9 @@ class TestUserManage(unittest.TestCase):
             usernum = int(usernums[0])
 
         # 查询数据库用户总计，并进行对比
-        conn = mysql.connector.connect(**self.config)
-        self.assertTrue(conn.is_connected(), "数据库连接失败")
-
-        cursor = conn.cursor()  # 创建游标对象
         query = "SELECT count(*) as num FROM sys_user WHERE del_flag = 0 ;"  # 执行查询
-        num = use_sql.useMysql(query)
-
+        nums = self.use_sql.useMysql(query)
+        num = nums[0][0]
         # 断言数据库中的用户数和页面上显示的用户数是否一致
         self.assertEqual(num, usernum, f"用户查询有误，页面显示: {usernum}条, 数据库: {num}条")
 
@@ -68,7 +66,7 @@ class TestUserManage(unittest.TestCase):
 
         # 查询数据库用户总计，并进行对比
         query = "SELECT user_name, nick_name  FROM sys_user WHERE del_flag = 0 limit 5;" # 执行查询
-        usernames = use_sql.useMysql(query)
+        usernames = self.use_sql.useMysql(query)
 
         # 循环遍历查询账号，并传入查询框中进行查询，对比结果
         for username in usernames:
@@ -164,7 +162,7 @@ class TestUserManage(unittest.TestCase):
 
         cursor = conn.cursor()  # 创建游标对象
         query = "SELECT count(*) as num FROM sys_user WHERE del_flag = 0 and status = 0;"  # 执行查询
-        num = use_sql.useMysql(query)  # 获取查询结果
+        num = self.use_sql.useMysql(query)  # 获取查询结果
         cursor.close()  # 关闭游标
         conn.close()  # 关闭数据库连接
 
@@ -200,7 +198,7 @@ class TestUserManage(unittest.TestCase):
 
         # 查询数据库用户总计，并进行对比
         query = "SELECT count(*) as num FROM sys_user WHERE del_flag = 0 and create_time >= '2023-11-01 00:00:00' and create_time <= '2023-11-30 23:59:59' ;" # 执行查询
-        nums = use_sql.useMysql(query)  # 获取查询结果
+        nums = self.use_sql.useMysql(query)  # 获取查询结果
         num = nums[0][0]
         # 断言数据库中的用户数和页面上显示的用户数是否一致
         self.assertEqual(num, usernum, f"用户查询有误，页面显示: {usernum}条, 数据库: {num}条")
@@ -210,7 +208,7 @@ class TestUserManage(unittest.TestCase):
 
 
 class TestInsertUser(unittest.TestCase):
-
+    use_sql = UseMysql()
     def setUp(self):
         # 初始化页面
         self.driver = webdriver.Chrome()
@@ -239,7 +237,7 @@ class TestInsertUser(unittest.TestCase):
         element.click()
         time.sleep(2)
         # 获取一个随机5位字母的字符串 用于昵称及账号
-        name = ''.join(random.choices(string.ascii_letters, k=5))
+        name = ''.join(random.choices(string.ascii_letters, k=8))
         # 用户昵称
         elements = WebDriverWait(self.driver, 10).until(
             EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "input[placeholder='请输入用户昵称']"))
@@ -267,7 +265,7 @@ class TestInsertUser(unittest.TestCase):
         )
         element.click()
 
-        # 定位角色的下拉框，并随机选择多选两个下拉框进行点击
+        # 定位角色的下拉框，并随机选择进行点击
         # 获取所有下拉项
         element_roles = WebDriverWait(self.driver, 10).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".el-select-dropdown__item"))
@@ -275,29 +273,20 @@ class TestInsertUser(unittest.TestCase):
 
         # 查询数据库角色，通过获取比对进行勾选
         query = "SELECT role_name  FROM sys_role where del_flag = 0 and role_key !='admin';"  # 执行查询
-        role = use_sql.useMysql(query)# 获取查询结果
+        roles = self.use_sql.useMysql(query)# 获取查询结果
         # 随机选择第一个元素并点击
-        first_index = random.randint(0, len(role) - 1)
-        first_role = role[first_index]
+        first_index = random.randint(0, len(roles) - 1)
+        role = roles[first_index]
         for element_role in element_roles:
-            if str(first_role[0]) == str(element_role.text):
+            if str(role[0]) == str(element_role.text):
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element_role)
                 element_role.click()
                 break
-        # 随机选择第二个元素并点击
-        role.pop(first_index)  # 删除已选择好的数据
-        second_index = random.randint(0, len(role) - 1)
-        second_role = role[second_index]
-        for element_role2 in element_roles:
-            if str(second_role[0]) == str(element_role2.text):
-                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element_role2)
-                element_role2.click()
-                break
-        element = WebDriverWait(self.driver, 15).until(
-            EC.visibility_of_element_located(
-                (By.XPATH, "/html/body/div[4]/div/div/div/form/div[1]/div[2]/div/div/div/div/div[1]/div[2]"))
-        )
-        element.click()
+        # element = WebDriverWait(self.driver, 15).until(
+        #     EC.visibility_of_element_located(
+        #         (By.XPATH, "/html/body/div[4]/div/div/div/form/div[1]/div[2]/div/div/div/div/div[1]/div[2]"))
+        # )
+        # element.click()
 
 
         # 用户性别
@@ -326,10 +315,9 @@ class TestInsertUser(unittest.TestCase):
 
         # 科室选择
         element_select = WebDriverWait(self.driver, 15).until(
-            EC.visibility_of_element_located(
-                (By.XPATH, "/html/body/div[5]/div/div/div/form/div[4]/div[1]/div/div/div/div/div[1]/div[2]"))
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "el-select__placeholder"))
         )
-        element_select.click()
+        element_select[4].click()
 
         # 定位科室的下拉框，并随机选择多选两个下拉框进行点击
         # 获取所有下拉项
@@ -339,7 +327,7 @@ class TestInsertUser(unittest.TestCase):
 
         # 查询数据库科室，通过获取比对进行勾选
         query = "SELECT dept_name  FROM sys_dept where del_flag = 0 and status = 0;" # 执行查询
-        depts = use_sql.useMysql(query) # 获取查询结果
+        depts = self.use_sql.useMysql(query)# 获取查询结果
         # 随机选择第一个元素并点击
         first_index = random.randint(0, len(depts) - 1)
         first_dept = depts[first_index]
@@ -357,3 +345,77 @@ class TestInsertUser(unittest.TestCase):
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element_dept2)
                 element_dept2.click()
                 break
+
+        # 身份证
+        element_insert = WebDriverWait(self.driver, 15).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='身份号']"))
+            )
+        element_insert.send_keys(generate_id_number())
+
+        #
+        query = "select role_key from sys_role where role_name = %s "
+        role_keys = self.use_sql.useMysql(query,role)
+        if str(role_keys[0][0]) == "doctor" or str(role_keys[0][0]) != "doctor":
+           # a = random.choice([1, 2])
+            a = 2
+            if a == 1:
+                # element_on = WebDriverWait(self.driver, 15).until(
+                #     EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/div/div/form/div[6]/div/div/div/div/span/div"))
+                # )
+                # element_on.click()
+                self.driver.find_element(By.XPATH, "/html/body/div[5]/div/div/div/form/div[6]/div/div/div/div/span/div").click()
+                # 添加医生证书编码
+                doctor_code = ''.join(random.choices(string.digits, k=8))
+                element_doctor = WebDriverWait(self.driver, 15).until(
+                    EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/div/div/form/div[7]/div[1]/div/div/div/div/input"))
+                )
+                element_doctor.send_keys(doctor_code)
+                element_doctor = WebDriverWait(self.driver, 15).until(
+                    EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/div/div/form/div[7]/div[2]/div/div/div/div/input"))
+                )
+                element_doctor.send_keys(doctor_code)
+                element_doctor = WebDriverWait(self.driver, 15).until(
+                    EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/div/div/form/div[8]/div/div/div/div/div/input"))
+                )
+                element_doctor.send_keys(doctor_code)
+            else:
+                # element_on = WebDriverWait(self.driver, 15).until(
+                #     EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/div/div/form/div[7]/div/div/div/div/input"))
+                # )
+                # element_on.click()
+                self.driver.find_element(By.XPATH,"/html/body/div[5]/div/div/div/form/div[10]/div/div/div/div/span").click()
+
+                # 添加护士证书编码
+                nurse_code = ''.join(random.choices(string.digits, k=8))
+                element_nurse = WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='护士职业证书编号']"))
+                )
+                element_nurse.send_keys(nurse_code)
+                element_nurse = WebDriverWait(self.driver, 15).until(
+                    EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/div/div/form/div[12]/div/div/div/div/div/input"))
+                )
+                element_nurse.send_keys(nurse_code)
+
+        # 备注
+        element_remark = WebDriverWait(self.driver, 15).until(EC.visibility_of_element_located((By.CLASS_NAME, "el-textarea__inner"))
+        )
+        element_remark.send_keys("自动化测试数据生成")
+
+        # 点击保存
+        # element_save = WebDriverWait(self.driver, 15).until(
+        #     EC.visibility_of_element_located((By.XPATH, "/html/body/div[5]/div/div/footer/div/button[2]/span"))
+        # )
+        self.driver.find_element(By.XPATH, "/html/body/div[5]/div/div/footer/div/button[2]/span").click()
+        # print(element_save.text)
+        # time.sleep(2)
+        # element_save.click()
+        self.driver.save_screenshot("userinsert_result_screenshot.png")
+
+        query = "select user_name from sys_user where user_name = %s "
+        result = self.use_sql.useMysql(query, name)
+        self.assertEqual(result[0][0], name, f"用户新增有误，数据库查询账号: {result[0][0]}, 新增输入账号: {name}")
+        print(result[0][0])
+        print(name)
+
+
+
+
