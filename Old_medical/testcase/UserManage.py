@@ -5,17 +5,15 @@ import string
 import time
 import unittest
 
-import mysql.connector
 from selenium import webdriver
-from selenium.common import TimeoutException, NoSuchElementException, WebDriverException
+from selenium.common import TimeoutException
 from selenium.webdriver import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from subs.login import LoginAdmin
-from testcase.__globe import config
-from subs.usemysql import UseMysql
-from subs.IdNumber import generate_id_number
+from Old_medical.obj.login import LoginAdmin
+from Old_medical.subs.usemysql import UseMysql
+from Old_medical.subs.IdNumber import generate_id_number
 
 
 
@@ -399,12 +397,54 @@ class TestInsertUser(unittest.TestCase):
             EC.visibility_of_all_elements_located((By.CLASS_NAME, "el-button--primary"))
         )
         element_save[len(element_save)-1].click()
-        self.driver.save_screenshot("userinsert_result_screenshot.png")
-
+        time.sleep(1)
         query = "select user_name from sys_user where user_name = %s "
         pramas = (name,)
         result = self.use_sql.useMysql(query, pramas)
+        print(result,name)
         self.assertEqual(result[0][0], name, f"用户新增有误，数据库查询账号: {result[0][0]}, 新增输入账号: {name}")
+
+    def test_required_insertuser(self):
+        # 进入新增页面
+        element = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "/html/body/div[1]/div/div[2]/section/div/div/div[2]/div[1]/div[1]/button"))
+        )
+        element.click()
+        time.sleep(2)
+        # 只输入必填项，进行新增
+        # 获取一个随机5位字母的字符串 用于昵称及账号
+        names = ''.join(random.choices(string.ascii_letters, k=8))
+        # 用户昵称
+        elements = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "input[placeholder='请输入用户昵称']"))
+        )
+        element = elements[1]
+        element.send_keys(names)
+
+        # 用户账号
+        elements = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_all_elements_located((By.CSS_SELECTOR, "input[placeholder='请输入用户账号']"))
+        )
+        element = elements[1]
+        element.send_keys(names)
+
+        # 用户密码
+        element = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "input[placeholder='请输入用户密码']"))
+        )
+        element.send_keys("123456")
+        # 点击保存
+        element_save = WebDriverWait(self.driver, 15).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "el-button--primary"))
+        )
+        element_save.click()
+        # element_save[len(element_save) - 1].click()
+        time.sleep(1)
+        query = "select user_name from sys_user where user_name = %s "
+        pramas = (names,)
+        result = self.use_sql.useMysql(query, pramas)
+        self.assertEqual(result[0][0], names, f"用户新增有误，数据库查询账号: {result[0][0]}, 新增输入账号: {names}")
 
     def tearDown(self):
         self.driver.quit()

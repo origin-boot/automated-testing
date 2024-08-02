@@ -1,8 +1,8 @@
 import unittest
 from BeautifulReport import BeautifulReport
-from testcase.LoginTest import TestLoginAdmin
-from testcase.UserManage import TestUserManage, TestInsertUser
-from testcase.HospitalInfomation import TestHospitalManage
+from New_medical.testcase.LoginTest import TestLoginAdmin
+from New_medical.testcase.UserManage import TestUserManage, TestInsertUser
+from New_medical.testcase.HospitalInfomation import TestHospitalManage
 
 if __name__ == '__main__':
     # 定义一个测试套件

@@ -5,10 +5,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+
+
 class LoginAdmin:
     def __init__(self, driver):
         self.driver = driver
-        self.login_url = "http://demo.smr.shuzhiqiyuan.com/#/login"
+        self.login_url = "http://192.168.1.141:94"
 
     def open_login_page(self):
         self.driver.get(self.login_url)

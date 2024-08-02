@@ -8,8 +8,8 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from subs.login import LoginAdmin
-from testcase.__globe import config
+from New_medical.obj.login import LoginAdmin
+from New_medical.__globe import config
 
 class TestHospitalManage(unittest.TestCase):
 

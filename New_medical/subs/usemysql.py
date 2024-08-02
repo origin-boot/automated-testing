@@ -1,4 +1,4 @@
-from testcase.__globe import config
+from New_medical.__globe import config
 import mysql.connector
 
 
